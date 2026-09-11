@@ -1,0 +1,13 @@
+.env
+service_account.json
+.streamlit/secrets.toml
+
+input/*
+!input/.gitkeep
+processed/*
+!processed/.gitkeep
+
+__pycache__/
+*.pyc
+venv/
+.venv/
