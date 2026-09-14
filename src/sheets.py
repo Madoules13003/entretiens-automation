@@ -44,8 +44,17 @@ def _find_worksheet(workbook, name: str):
     raise KeyError(f"Aucun onglet nommé « {name} » trouvé. Onglets disponibles : {available}")
 
 
+def _find_last_formula_row(worksheet) -> Optional[int]:
+    """Repère la dernière ligne contenant une formule (ex. un total), pour insérer juste avant elle."""
+    for row in range(worksheet.max_row, 0, -1):
+        for cell in worksheet[row]:
+            if isinstance(cell.value, str) and cell.value.startswith("="):
+                return row
+    return None
+
+
 def append_row(fields: dict) -> None:
-    """Télécharge le fichier Excel partagé, ajoute une ligne dans l'onglet cible, puis le ré-uploade."""
+    """Télécharge le fichier Excel partagé, insère une ligne avant la ligne de calcul, puis le ré-uploade."""
     file_id = st.secrets.get("GOOGLE_SHEET_ID") or os.environ["GOOGLE_SHEET_ID"]
     session = _get_session()
 
@@ -55,19 +64,27 @@ def append_row(fields: dict) -> None:
     workbook = load_workbook(BytesIO(download.content))
     worksheet = _find_worksheet(workbook, _SHEET_NAME)
 
-    worksheet.append(
-        [
-            datetime.now().strftime("%Y-%m-%d %H:%M"),
-            fields["nom"],
-            fields["prenom"],
-            fields["formation"],
-            fields["projet_1"],
-            fields["projet_2"],
-            fields["alignement_projet"],
-            fields["emploi_formation"],
-            fields["secteur"],
-        ]
-    )
+    values = [
+        datetime.now().strftime("%Y-%m-%d %H:%M"),
+        fields["nom"],
+        fields["prenom"],
+        fields["formation"],
+        fields["projet_1"],
+        fields["projet_2"],
+        fields["alignement_projet"],
+        fields["emploi_formation"],
+        fields["secteur"],
+    ]
+
+    calc_row = _find_last_formula_row(worksheet)
+    if calc_row is not None:
+        worksheet.insert_rows(calc_row)
+        target_row = calc_row
+    else:
+        target_row = worksheet.max_row + 1
+
+    for column_index, value in enumerate(values, start=1):
+        worksheet.cell(row=target_row, column=column_index, value=value)
 
     buffer = BytesIO()
     workbook.save(buffer)
