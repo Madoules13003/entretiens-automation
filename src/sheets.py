@@ -14,7 +14,7 @@ _SCOPES = ["https://www.googleapis.com/auth/drive"]
 _DRIVE_FILES_URL = "https://www.googleapis.com/drive/v3/files"
 _UPLOAD_URL = "https://www.googleapis.com/upload/drive/v3/files"
 _MIME_XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-_SHEET_NAME = "cartographie des métiers"
+_SHEET_NAME = "cartographie des metiers"
 
 _session: Optional[AuthorizedSession] = None
 
