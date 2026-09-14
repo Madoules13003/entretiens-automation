@@ -35,6 +35,15 @@ def _get_session() -> AuthorizedSession:
     return _session
 
 
+def _find_worksheet(workbook, name: str):
+    normalized = name.strip().casefold()
+    for sheet_name in workbook.sheetnames:
+        if sheet_name.strip().casefold() == normalized:
+            return workbook[sheet_name]
+    available = ", ".join(workbook.sheetnames)
+    raise KeyError(f"Aucun onglet nommé « {name} » trouvé. Onglets disponibles : {available}")
+
+
 def append_row(fields: dict) -> None:
     """Télécharge le fichier Excel partagé, ajoute une ligne dans l'onglet cible, puis le ré-uploade."""
     file_id = st.secrets.get("GOOGLE_SHEET_ID") or os.environ["GOOGLE_SHEET_ID"]
@@ -44,7 +53,7 @@ def append_row(fields: dict) -> None:
     download.raise_for_status()
 
     workbook = load_workbook(BytesIO(download.content))
-    worksheet = workbook[_SHEET_NAME]
+    worksheet = _find_worksheet(workbook, _SHEET_NAME)
 
     worksheet.append(
         [
